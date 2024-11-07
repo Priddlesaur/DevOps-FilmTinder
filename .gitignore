@@ -1,0 +1,10 @@
+.idea/
+.venv/
+
+# macOS
+.DS_Store
+
+__pycache__
+.env
+env
+test_db.db
