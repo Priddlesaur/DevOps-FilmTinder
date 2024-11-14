@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, Date
-from sqlalchemy.orm import DeclarativeBase, Relationship
+from sqlalchemy import Integer, Date, Column, ForeignKey, String
+from sqlalchemy.orm import DeclarativeBase
 
 
 class Base(DeclarativeBase):
@@ -15,5 +15,13 @@ class Movie(Base):
 
 class Genre(Base):
     __tablename__ = 'genres'
-    id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, unique=True, nullable=False)
+
+class Rating(Base):
+    __tablename__ = 'ratings'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    movie_id = Column(Integer, ForeignKey('movies.id'))
+    user_id = Column(Integer, ForeignKey('users.id'))
+    rating = Column(Integer, nullable=False)
+    date = Column(Date, nullable=False)
