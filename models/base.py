@@ -1,7 +1,6 @@
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import Column, Integer, String, Date, ForeignKey
 
-
 class Base(DeclarativeBase):
     pass
 
@@ -32,3 +31,4 @@ class User(Base):
     username = Column(String, unique=True)
     first_name = Column(String)
     last_name = Column(String)
+
