@@ -11,7 +11,7 @@ router = APIRouter(
     tags=["movies"],
 )
 
-@router.get("/")
+@router.get("/", response_model=MovieDto)
 async def read_movies(db: Session = Depends(get_db)):
     movies = db.query(Movie).all()
     if not movies:
@@ -24,11 +24,14 @@ async def read_movies(db: Session = Depends(get_db)):
     # Return the movies
     return movies_dtos
 
-@router.get("/{movie_id}")
-async def read_genre(movie_id: int, db: Session = Depends(get_db)):
+@router.get("/{movie_id}", response_model=MovieDto)
+async def read_movie(movie_id: int, db: Session = Depends(get_db)):
     movie = db.query(Movie).get(movie_id)
     if not movie:
         raise HTTPException(status_code=404, detail="Movie not found")
 
     # Return the movie
     return MovieDto.model_validate(movie)
+
+@router.post("/", response_model=MovieDto)
+async def create_movie(movie: MovieDto):
