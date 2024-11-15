@@ -34,4 +34,11 @@ async def read_movie(movie_id: int, db: Session = Depends(get_db)):
     return MovieDto.model_validate(movie)
 
 @router.post("/", response_model=MovieDto)
-async def create_movie(movie: MovieDto):
+async def create_movie(movie: MovieDto, db: Session = Depends(get_db)):
+    new_movie = Movie(**movie.model_dump())
+
+    db.add(new_movie)
+    db.commit()
+    db.refresh(new_movie)
+
+    return MovieDto.model_validate(new_movie)
