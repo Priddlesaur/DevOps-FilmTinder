@@ -8,3 +8,10 @@ __pycache__
 .env
 env
 test_db.db
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.hcl

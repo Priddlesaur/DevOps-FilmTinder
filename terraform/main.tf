@@ -14,27 +14,27 @@ provider "digitalocean" {
 
 
 provider "kubernetes" {
-  host                   = digitalocean_kubernetes_cluster.my_cluster.endpoint
-  token                  = digitalocean_kubernetes_cluster.my_cluster.kube_config[0].token
-  cluster_ca_certificate = base64decode(digitalocean_kubernetes_cluster.my_cluster.kube_config[0].cluster_ca_certificate)
+  host                   = digitalocean_kubernetes_cluster.filmtinder_cluster.endpoint
+  token                  = digitalocean_kubernetes_cluster.filmtinder_cluster.kube_config[0].token
+  cluster_ca_certificate = base64decode(digitalocean_kubernetes_cluster.filmtinder_cluster.kube_config[0].cluster_ca_certificate)
 }
 
 provider "helm" {
   kubernetes {
-    host                   = digitalocean_kubernetes_cluster.my_cluster.endpoint
-    token                  = digitalocean_kubernetes_cluster.my_cluster.kube_config[0].token
-    cluster_ca_certificate = base64decode(digitalocean_kubernetes_cluster.my_cluster.kube_config[0].cluster_ca_certificate)
+    host                   = digitalocean_kubernetes_cluster.filmtinder_cluster.endpoint
+    token                  = digitalocean_kubernetes_cluster.filmtinder_cluster.kube_config[0].token
+    cluster_ca_certificate = base64decode(digitalocean_kubernetes_cluster.filmtinder_cluster.kube_config[0].cluster_ca_certificate)
   }
 }
 
 # Kubernetes-cluster aanmaken
-resource "digitalocean_kubernetes_cluster" "my_cluster" {
+resource "digitalocean_kubernetes_cluster" "filmtinder_cluster" {
   name    = var.cluster_name
   region  = var.region
   version = "1.31.1-do.4"
 
   node_pool {
-    name       = "webapi-compleet"
+    name       = "filmtinder-webapi"
     size       = "s-1vcpu-2gb"
     node_count = var.node_count
   }
@@ -223,10 +223,10 @@ resource "kubernetes_deployment" "website" {
         }
         container {
           name  = "website"
-          image = "registry.digitalocean.com/devops-cicd/fast-api:latest"
+          image = "registry.digitalocean.com/teamfilmtinder/filmtinder-api:latest"
           image_pull_policy = "Always"
           port {
-            container_port = 8000
+            container_port = 5000
           }
           env {
             name  = "DATABASE_URL"
@@ -256,7 +256,7 @@ resource "kubernetes_service" "webapi-loadbalancer" {
     port {
       protocol    = "TCP"
       port        = 80       # Externe poort
-      target_port = 8000     # Poort waar je app luistert
+      target_port = 5000     # Poort waar je app luistert
     }
 
     type = "LoadBalancer"
