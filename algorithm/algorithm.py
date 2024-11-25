@@ -60,7 +60,10 @@ for entry in ratings_data:
         user_item_matrix[user_id] = {}
     user_item_matrix[user_id][movie_id] = rating
 
+# Haal alle unieke film ID's op uit de beoordelingen
 all_movies = {entry['movie_id'] for entry in ratings_data}
+
+# Itereer door de beoordelingen van iedere gebruiker
 for user_ratings in user_item_matrix.values():
     for movie in all_movies:
         if movie not in user_ratings:
@@ -68,7 +71,7 @@ for user_ratings in user_item_matrix.values():
 
 
 # Cosinusgelijkenis
-def cosine_similarity_manual(user1, user2):
+def cosine_similarity(user1, user2):
     ratings1 = list(user_item_matrix[user1].values())
     ratings2 = list(user_item_matrix[user2].values())
     dot_product = sum(r1 * r2 for r1, r2 in zip(ratings1, ratings2))
@@ -81,7 +84,7 @@ def get_top_k_similar_users(user_id, k=2):
     similarities = {}
     for other_user in user_item_matrix:
         if other_user != user_id:
-            similarity = cosine_similarity_manual(user_id, other_user)
+            similarity = cosine_similarity(user_id, other_user)
             similarities[other_user] = similarity
     top_k_users = sorted(similarities, key=similarities.get, reverse=True)[:k]
     return top_k_users
@@ -144,7 +147,7 @@ def predict_rating(user_id, movie_id, k=2):
         rating = user_item_matrix[other_user][movie_id]
         if rating > 0:
             ratings.append(rating)
-            similarities.append(cosine_similarity_manual(user_id, other_user))
+            similarities.append(cosine_similarity(user_id, other_user))
 
     if not ratings:
         return None
@@ -180,6 +183,6 @@ def recommend_movies(user_id, k=2, top_n=3):
 
 
 # Voorbeeld van gebruik
-user_id = 1
+user_id = 7
 recommended_movie_titles = recommend_movies(user_id)
 print(f"Aanbevelingen voor gebruiker {user_id}: {recommended_movie_titles}")
