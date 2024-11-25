@@ -21,7 +21,6 @@ async def read_genres(db: Session = Depends(get_db)):
     for genre in genres:
         genre_dtos.append(GenreDto.model_validate(genre))
 
-    # Return the genres
     return genre_dtos
 
 @router.get("/{genre_id}")
