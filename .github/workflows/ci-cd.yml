@@ -72,4 +72,4 @@ jobs:
         env:
           COMMIT_HASH: ${{ github.sha }}
         run: |
-          kubectl set image deployment/filmtinder-cluster website=registry.digitalocean.com/teamfilmtinder/filmtinder-api:${COMMIT_HASH} -n filmtinder-api-db
+          kubectl set image deployment/website website=registry.digitalocean.com/teamfilmtinder/filmtinder-api:${COMMIT_HASH} -n filmtinder-api-db
