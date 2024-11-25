@@ -50,8 +50,6 @@ jobs:
 
       # Push Docker Image
       - name: Push Docker image to DigitalOcean
-        env:
-          COMMIT_HASH: ${{ github.sha }}
         run: |
           docker push --all-tags registry.digitalocean.com/teamfilmtinder/filmtinder-api
 
