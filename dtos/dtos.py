@@ -1,11 +1,17 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
-class GenreDto(BaseModel):
+
+class GenreBaseDto(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    id: int
-    name: str
+
+    name: str = Field(min_length=1, max_length=50, description="Name of the genre")
+
+class GenreDto(GenreBaseDto):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = None
 
 class UserDto(BaseModel):
     model_config = ConfigDict(from_attributes=True)
