@@ -1,8 +1,10 @@
 import os
 
+from alembic.config import Config
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from alembic import command
 
 # Load environment variables
 load_dotenv()

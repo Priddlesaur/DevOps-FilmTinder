@@ -1,0 +1,10 @@
+# Ignore all git-related files
+.git
+.gitignore
+README.md
+
+# Ignore example files
+.env.example
+
+# Ignore test database
+test_db.db
