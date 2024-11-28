@@ -18,7 +18,7 @@ jobs:
 #      - name: Set up Python
 #        uses: actions/setup-python@v2
 #        with:
-#          python-version: '3.11'
+#          python-version: '3.13'
 #
 #        # Install dependencies
 #      - name: Install dependencies
@@ -30,7 +30,7 @@ jobs:
 #        # Run tests
 #      - name: Run tests
 #        env:
-#         DATABASE_URL: "sqlite:///:memory:"
+#         DATABASE_URL: "sqlite:///./test_db.db"
 #        run: |
 #         pytest
 
