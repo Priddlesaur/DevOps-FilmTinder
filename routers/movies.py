@@ -1,13 +1,10 @@
-from dbm import error
-from typing import List
-
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Depends
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from database import get_db
-from dtos.dtos import MovieDto, MovieUpdateDto
+from dtos.dtos import MovieDto, MovieBaseDto
 from models.base import Movie
 
 router = APIRouter(
@@ -15,7 +12,7 @@ router = APIRouter(
     tags=["movies"],
 )
 
-@router.get("/", response_model=List[MovieDto])
+@router.get("/", response_model=list[MovieDto])
 async def read_movies(db: Session = Depends(get_db)):
     movies = db.query(Movie).all()
     if not movies:
@@ -54,8 +51,8 @@ async def create_movie(movie: MovieDto, db: Session = Depends(get_db)):
 
     return MovieDto.model_validate(new_movie)
 
-@router.patch("/{movie_id}", response_model=MovieUpdateDto)
-async def update_movie(movie_id: int, updated_movie: MovieUpdateDto, db: Session = Depends(get_db)):
+@router.patch("/{movie_id}", response_model=MovieBaseDto)
+async def update_movie(movie_id: int, updated_movie: MovieBaseDto, db: Session = Depends(get_db)):
     # Zoek de film in de database
     movie = db.query(Movie).filter_by(id=movie_id).first()
 
@@ -86,9 +83,9 @@ async def update_movie(movie_id: int, updated_movie: MovieUpdateDto, db: Session
         raise HTTPException(status_code=400, detail=f"Invalid field: {str(err)}")
 
     # Retourneer de bijgewerkte film
-    return MovieUpdateDto.model_validate(movie)
+    return MovieBaseDto.model_validate(movie)
 
-@router.delete("/{movie_id}", response_model=dict)
+@router.delete("/{movie_id}")
 async def delete_movie(movie_id: int, db: Session = Depends(get_db)):
 
     movie = db.query(Movie).get(movie_id)

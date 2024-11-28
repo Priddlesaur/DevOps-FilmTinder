@@ -78,4 +78,4 @@ async def delete_genre(genre_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     # Return a message
-    return {"message": "Genre deleted"}
+    return {"message": f"Genre with {genre_id} has been deleted"}

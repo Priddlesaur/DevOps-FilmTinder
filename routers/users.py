@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
+from sqlalchemy.testing.suite.test_reflection import users
 
 from database import get_db
-from dtos.dtos import UserDto
+from dtos.dtos import UserDto, UserBaseDto
 from models.base import User
 
 router = APIRouter(
@@ -11,50 +12,62 @@ router = APIRouter(
     tags=["users"],
 )
 
-@router.get("/")
-async def read_users(username: str | None = None,
-                     first_name: str | None = None,
-                     last_name: str | None = None,
-                     db: Session = Depends(get_db)):
-    # Receiving a user by username if there is a username given in the URL
-    if username:
-        user = db.query(User).filter(User.username == username).first()
-        # If there is not a user with the given username, give an error
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        # else return the user
-        return UserDto.model_validate(user)
-    if first_name and last_name:
-        user = db.query(User).filter(User.first_name == first_name, User.last_name == last_name).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        return UserDto.model_validate(user)
-    elif first_name:
-        user = db.query(User).filter(User.first_name == first_name).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        return UserDto.model_validate(user)
-    elif last_name:
-        user = db.query(User).filter(User.last_name == last_name).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        return UserDto.model_validate(user)
-    else:
-        # If there is no username given in the URL, get all users
-        users = db.query(User).all()
-        # If there are no users, give an error
-        if not users:
-            raise HTTPException(status_code=404, detail="No users found")
+@router.get("/", response_model=list[UserDto])
+async def get_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    if not users:
+        HTTPException(status_code=404, detail="No users found")
 
-        # For every user in users, put them in a list
-        user_dtos = []
-        for user in users:
-            user_dtos.append(UserDto.model_validate(user))
+    user_dtos = []
+    for user in users:
+        user_dtos.append(UserDto.model_validate(user))
 
-        # Return the users
-        return user_dtos
+    return user_dtos
 
-@router.get("/{user_id}")
+# @router.get("/")
+# async def read_users(username: str | None = None,
+#                      first_name: str | None = None,
+#                      last_name: str | None = None,
+#                      db: Session = Depends(get_db)):
+#     # Receiving a user by username if there is a username given in the URL
+#     if username:
+#         user = db.query(User).filter(User.username == username).first()
+#         # If there is not a user with the given username, give an error
+#         if not user:
+#             raise HTTPException(status_code=404, detail="User not found")
+#         # else return the user
+#         return UserDto.model_validate(user)
+#     if first_name and last_name:
+#         user = db.query(User).filter(User.first_name == first_name, User.last_name == last_name).first()
+#         if not user:
+#             raise HTTPException(status_code=404, detail="User not found")
+#         return UserDto.model_validate(user)
+#     elif first_name:
+#         user = db.query(User).filter(User.first_name == first_name).first()
+#         if not user:
+#             raise HTTPException(status_code=404, detail="User not found")
+#         return UserDto.model_validate(user)
+#     elif last_name:
+#         user = db.query(User).filter(User.last_name == last_name).first()
+#         if not user:
+#             raise HTTPException(status_code=404, detail="User not found")
+#         return UserDto.model_validate(user)
+#     else:
+#         # If there is no username given in the URL, get all users
+#         users = db.query(User).all()
+#         # If there are no users, give an error
+#         if not users:
+#             raise HTTPException(status_code=404, detail="No users found")
+#
+#         # For every user in users, put them in a list
+#         user_dtos = []
+#         for user in users:
+#             user_dtos.append(UserDto.model_validate(user))
+#
+#         # Return the users
+#         return user_dtos
+
+@router.get("/{user_id}", response_model=UserDto)
 async def read_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).get(user_id)
     if not user:
@@ -87,7 +100,7 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     db.delete(user)
     db.commit()
-    return {"User deleted"}
+    return {"message": f"User with {user_id} has been deleted"}
 
 @router.delete("/")
 async def delete_user(username : str, db: Session = Depends(get_db)):
@@ -96,7 +109,7 @@ async def delete_user(username : str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     db.delete(user)
     db.commit()
-    return {"User deleted"}
+    return {"User with deleted"}
 
 @router.put("/{user_id}")
 async def update_user(user_id: int, user: UserDto, db: Session = Depends(get_db)):
