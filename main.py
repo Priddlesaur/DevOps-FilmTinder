@@ -1,10 +1,7 @@
-from alembic.config import Config
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-from database import get_db, DATABASE_URL
+from fastapi import FastAPI
+
 from routers import genres, movies, users
-from alembic import command
 
 # Load environment variables
 load_dotenv()
@@ -16,5 +13,5 @@ app.include_router(users.router)
 app.include_router(movies.router)
 
 @app.get("/")
-async def root(db: Session = Depends(get_db)):
-    return {"message": "Hello World"}
+async def root():
+    return {"message": "Welcome to the FilmTinder API!"}
