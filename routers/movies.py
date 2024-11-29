@@ -12,8 +12,20 @@ router = APIRouter(
     tags=["movies"],
 )
 
+def get_movie_or_404(movie_id: int, db: Session) -> Movie:
+    """
+    Helperfunction for retreiving an existing movie or throwing a 404-error.
+    """
+    movie = db.query(Movie).get(movie_id)
+    if not movie:
+        raise HTTPException(status_code=404, detail="Movie not found")
+    return movie
+
 @router.get("/", response_model=list[MovieDto])
 async def read_movies(db: Session = Depends(get_db)):
+    """
+    Retreive all movies.
+    """
     movies = db.query(Movie).all()
     if not movies:
         raise HTTPException(status_code=404, detail="No movies found")
@@ -22,14 +34,18 @@ async def read_movies(db: Session = Depends(get_db)):
 
 @router.get("/{movie_id}", response_model=MovieDto)
 async def read_movie(movie_id: int, db: Session = Depends(get_db)):
-    movie = db.query(Movie).get(movie_id)
-    if not movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
+    """
+    Retreive movie by ID.
+    """
+    movie = get_movie_or_404(movie_id, db)
 
     return MovieDto.model_validate(movie)
 
 @router.post("/", response_model=MovieDto)
 async def create_movie(movie: MovieDto, db: Session = Depends(get_db)):
+    """
+    Create a new movie.
+    """
     new_movie = Movie(**movie.model_dump())
 
     try:
@@ -42,8 +58,7 @@ async def create_movie(movie: MovieDto, db: Session = Depends(get_db)):
 
         if "foreign key constraint" in str(err.orig).lower():
             raise HTTPException(status_code=400, detail="Invalid foreign key value")
-        else:
-            raise HTTPException(status_code=400, detail="Database constraint error")
+        raise HTTPException(status_code=400, detail="Database constraint error")
 
     except KeyError as err:
         db.rollback()
@@ -51,16 +66,13 @@ async def create_movie(movie: MovieDto, db: Session = Depends(get_db)):
 
     return MovieDto.model_validate(new_movie)
 
-@router.patch("/{movie_id}", response_model=MovieBaseDto)
+@router.patch("/{movie_id}", response_model=MovieDto)
 async def update_movie(movie_id: int, updated_movie: MovieBaseDto, db: Session = Depends(get_db)):
-    # Zoek de film in de database
-    movie = db.query(Movie).filter_by(id=movie_id).first()
+    """
+    Update an existing movie by ID.
+    """
+    movie = get_movie_or_404(movie_id, db)
 
-    # Controleer of de film bestaat
-    if not movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
-
-    # Update alleen de velden die in de patch-aanvraag zijn gespecificeerd
     try:
         update_data = updated_movie.model_dump(exclude_unset=True)
         for key, value in update_data.items():
@@ -69,28 +81,25 @@ async def update_movie(movie_id: int, updated_movie: MovieBaseDto, db: Session =
         db.commit()
         db.refresh(movie)
 
-
     except IntegrityError as err:
         db.rollback()
 
         if "foreign key constraint" in str(err.orig).lower():
             raise HTTPException(status_code=400, detail="Invalid foreign key value")
-        else:
-            raise HTTPException(status_code=400, detail="Database constraint error")
+        raise HTTPException(status_code=400, detail="Database constraint error")
 
     except KeyError as err:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Invalid field: {str(err)}")
 
-    # Retourneer de bijgewerkte film
     return MovieBaseDto.model_validate(movie)
 
 @router.delete("/{movie_id}")
 async def delete_movie(movie_id: int, db: Session = Depends(get_db)):
-
-    movie = db.query(Movie).get(movie_id)
-    if not movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
+    """
+    Delete a movie by ID.
+    """
+    movie = get_movie_or_404(movie_id, db)
 
     db.delete(movie)
     db.commit()
