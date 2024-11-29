@@ -10,7 +10,7 @@ class Movie(Base):
     title = Column(String)
     release_date = Column(Date)
     runtime = Column(Integer)
-    imdb_id = Column(Integer, unique=True)
+    imdb_id = Column(String, unique=True)
     genre_id = Column(Integer, ForeignKey('genres.id'))
 
     genre = relationship('Genre', back_populates='movies')

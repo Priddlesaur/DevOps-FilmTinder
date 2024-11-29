@@ -12,9 +12,9 @@ router = APIRouter(
     tags=["movies"],
 )
 
-def get_movie_or_404(movie_id: int, db: Session) -> Movie:
+def try_get_movie(movie_id: int, db: Session) -> Movie:
     """
-    Helperfunction for retreiving an existing movie or throwing a 404-error.
+    Helperfunction for retreiving an existing movie by ID or throwing a 404-error.
     """
     movie = db.query(Movie).get(movie_id)
     if not movie:
@@ -37,7 +37,7 @@ async def read_movie(movie_id: int, db: Session = Depends(get_db)):
     """
     Retreive movie by ID.
     """
-    movie = get_movie_or_404(movie_id, db)
+    movie = try_get_movie(movie_id, db)
 
     return MovieDto.model_validate(movie)
 
@@ -71,7 +71,7 @@ async def update_movie(movie_id: int, updated_movie: MovieBaseDto, db: Session =
     """
     Update an existing movie by ID.
     """
-    movie = get_movie_or_404(movie_id, db)
+    movie = try_get_movie(movie_id, db)
 
     try:
         update_data = updated_movie.model_dump(exclude_unset=True)
@@ -99,7 +99,7 @@ async def delete_movie(movie_id: int, db: Session = Depends(get_db)):
     """
     Delete a movie by ID.
     """
-    movie = get_movie_or_404(movie_id, db)
+    movie = try_get_movie(movie_id, db)
 
     db.delete(movie)
     db.commit()

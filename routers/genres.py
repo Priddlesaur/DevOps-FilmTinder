@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Response, Depends
-# from fastapi.params import Depends
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -10,6 +9,15 @@ router = APIRouter(
     prefix="/genres",
     tags=["genres"],
 )
+
+def try_get_genre(genre_id: int, db: Session) -> Genre:
+    """
+    Helperfunction for retreiving an existing genre by ID or throwing a 404-error.
+    """
+    genre = db.query(Genre).get(genre_id)
+    if not genre:
+        raise HTTPException(status_code=404, detail="Genre not found")
+    return genre
 
 @router.get("/", response_model=list[GenreDto])
 async def read_genres(db: Session = Depends(get_db)):
@@ -27,9 +35,7 @@ async def read_genre(genre_id: int, db: Session = Depends(get_db)):
     """
     Retrieve genre by ID.
     """
-    genre = db.query(Genre).get(genre_id)
-    if not genre:
-        raise HTTPException(status_code=404, detail="Genre not found")
+    genre = try_get_genre(genre_id, db)
 
     return GenreDto.model_validate(genre)
 
@@ -59,9 +65,7 @@ async def update_genre(genre_id: int, updated_genre: GenreBaseDto, db: Session =
     """
     Update an existing genre by ID.
     """
-    genre = db.query(Genre).filter_by(id=genre_id).first()
-    if not genre:
-        raise HTTPException(status_code=404, detail="Genre not found")
+    genre = try_get_genre(genre_id, db)
 
     updates = updated_genre.model_dump(exclude_none=True)
     if not updates:
@@ -83,9 +87,7 @@ async def delete_genre(genre_id: int, db: Session = Depends(get_db)):
     """
     Delete a genre by ID.
     """
-    genre = db.query(Genre).get(genre_id)
-    if not genre:
-        raise HTTPException(status_code=404, detail="Genre not found")
+    genre = try_get_genre(genre_id, db)
 
     # Delete the genre from the database
     db.delete(genre)
