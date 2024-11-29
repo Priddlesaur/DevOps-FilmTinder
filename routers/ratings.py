@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=list[RatingDto])
-async def get_ratings(db: Session = Depends(get_db)):
+async def read_ratings(db: Session = Depends(get_db)):
     ratings = db.query(Rating).all()
     if not ratings:
         HTTPException(status_code=404, detail="No ratings found")
@@ -24,7 +24,7 @@ async def get_ratings(db: Session = Depends(get_db)):
     return rating_dtos
 
 @router.get("/{id}", response_model=RatingDto)
-async def get_rating(rating_id: int, db: Session = Depends(get_db)):
+async def read_rating(rating_id: int, db: Session = Depends(get_db)):
     rating = db.query(Rating).get(rating_id)
     if not rating:
         HTTPException(status_code=404, detail="Rating not found")

@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
-from sqlalchemy.testing.suite.test_reflection import users
 
 from database import get_db
 from dtos.dtos import UserDto, UserBaseDto
@@ -13,7 +12,7 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=list[UserDto])
-async def get_users(db: Session = Depends(get_db)):
+async def read_users(db: Session = Depends(get_db)):
     users = db.query(User).all()
     if not users:
         HTTPException(status_code=404, detail="No users found")
