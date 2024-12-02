@@ -1,18 +1,15 @@
 from datetime import datetime
-
 import pytest
 from fastapi.testclient import TestClient
-
 from dtos.dtos import MovieDto
 from main import app
 from unittest.mock import MagicMock
 from models.base import Movie
-from routers.movies import read_movies, read_movie, create_movie
+from routers.movies import read_movies, read_movie, create_movie, update_movie, delete_movie
 
 Test = TestClient(app)
 
 pytest_plugins = ('pytest_asyncio',)
-
 
 @pytest.mark.asyncio
 async def test_read_movies():
@@ -74,6 +71,48 @@ async def test_create_movie():
     assert result.runtime == mock_movie.runtime
     assert result.imdb_id == mock_movie.imdb_id
     assert result.genre_id == mock_movie.genre_id
+
+@pytest.mark.asyncio
+async def test_update_movie():
+    mock_db = MagicMock()
+    movie_id = 1
+    existing_movie = Movie(id = movie_id, title = 'Titanic',
+    release_date = datetime(2001,11,11), runtime=120, imdb_id=1, genre_id=1)
+    updated_movie = MovieDto(title = 'Titanic2', release_date = datetime(2001,11,11), runtime=120, imdb_id=1, genre_id=1)
+
+    mock_db.query.return_value.filter_by.return_value.first.return_value = existing_movie
+
+    result = await update_movie(movie_id = movie_id, updated_movie = updated_movie, db=mock_db)
+
+    mock_db.commit.assert_called_once()
+    mock_db.refresh.assert_called_once()
+
+    assert existing_movie.title == updated_movie.title
+    assert result.title == updated_movie.title
+    assert result.release_date == updated_movie.release_date
+    assert result.runtime == updated_movie.runtime
+    assert result.imdb_id == updated_movie.imdb_id
+    assert result.genre_id == updated_movie.genre_id
+
+@pytest.mark.asyncio
+async def test_delete_movie():
+    mock_db = MagicMock()
+    movie_id = 1
+    mock_movie = Movie(id = movie_id, title = 'Titanic', release_date=datetime(2001,11,11), runtime=120, imdb_id=1, genre_id=1)
+
+    mock_db.query.return_value.filter.return_value.first.return_value = mock_movie
+
+    result = await delete_movie(movie_id = movie_id, db=mock_db)
+
+    mock_db.delete.assert_called_once()
+    mock_db.commit.assert_called_once()
+
+    assert result == {"detail": f"Movie with ID {movie_id} has been deleted"}
+
+
+
+
+
 
 
 
