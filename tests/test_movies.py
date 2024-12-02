@@ -54,11 +54,12 @@ async def test_read_movie():
 @pytest.mark.asyncio
 async def test_create_movie():
     mock_db = MagicMock()
+    mock_response = MagicMock()
     mock_movie = MovieDto(id=1, title='Titanic', release_date=datetime(2001,11,11), runtime=120, imdb_id='123', genre_id=1)
 
     mock_db.query.return_value.filter.return_value.first.return_value = None
 
-    result = await create_movie(movie=mock_movie, db=mock_db)
+    result = await create_movie(movie=mock_movie, response=mock_response, db=mock_db)
 
     mock_db.add.assert_called_once()
     mock_db.commit.assert_called_once()

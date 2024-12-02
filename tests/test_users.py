@@ -5,7 +5,7 @@ from dtos.dtos import UserDto
 from main import app
 from unittest.mock import MagicMock
 from models.base import User
-from routers.users import read_user, get_users, create_user, update_user, delete_user
+from routers.users import read_user, read_users, create_user, update_user, delete_user
 
 Test = TestClient(app)
 
@@ -16,20 +16,20 @@ async def test_get_users():
     # Arrange
     mock_db = MagicMock()
     mock_users = [
-        MagicMock(spec=User, id=1, username='us1', first_name='fn1', last_name='ln1'),
-        MagicMock(spec=User, id=2, username='us2', first_name='fn2', last_name='ln2'),
-        MagicMock(spec=User, id=3, username='us3', first_name='fn3', last_name='ln3')
+        MagicMock(spec=User, id=1, username='user1', first_name='firstname1', last_name='lastname1'),
+        MagicMock(spec=User, id=2, username='user2', first_name='firstname2', last_name='lastname2'),
+        MagicMock(spec=User, id=3, username='user3', first_name='firstname3', last_name='lastname3')
     ]
     mock_db.query.return_value.all.return_value = mock_users
 
     # Act
-    result = await get_users(db=mock_db)
+    result = await read_users(db=mock_db)
 
     # Assert
     assert all(user.id in [1,2,3] for user in result)
-    assert all(user.username in ['us1', 'us2', 'us3'] for user in result)
-    assert all(user.first_name in ['fn1', 'fn2', 'fn3'] for user in result)
-    assert all(user.last_name in ['ln1', 'ln2', 'ln3'] for user in result)
+    assert all(user.username in ['user1', 'user2', 'user3'] for user in result)
+    assert all(user.first_name in ['firstname1', 'firstname2', 'firstname3'] for user in result)
+    assert all(user.last_name in ['lastname1', 'lastname2', 'lastname3'] for user in result)
 
 @pytest.mark.asyncio
 async def test_read_user():
@@ -37,9 +37,9 @@ async def test_read_user():
     mock_db = MagicMock()
     mock_user = MagicMock(spec=User)
     mock_user.id = 1
-    mock_user.username = 'us1'
-    mock_user.first_name = 'fn1'
-    mock_user.last_name = 'ln1'
+    mock_user.username = 'user1'
+    mock_user.first_name = 'firstname1'
+    mock_user.last_name = 'lastname1'
     mock_db.query.return_value.get.return_value = mock_user
 
     #Act
@@ -47,14 +47,14 @@ async def test_read_user():
 
     #Assert
     assert result.id == mock_user.id
-    assert result.username == 'us1'
-    assert result.first_name == 'fn1'
-    assert result.last_name == 'ln1'
+    assert result.username == 'user1'
+    assert result.first_name == 'firstname1'
+    assert result.last_name == 'lastname1'
 
 @pytest.mark.asyncio
 async def test_create_user():
     mock_db = MagicMock()
-    mock_user = UserDto(username = 'us1', first_name = 'fn1', last_name = 'ln1')
+    mock_user = UserDto(username = 'user1', first_name = 'firstname1', last_name = 'lastname1')
 
     mock_db.query.return_value.filter.return_value.first.return_value = None
 
@@ -65,9 +65,9 @@ async def test_create_user():
     mock_db.refresh.assert_called_once()
 
     assert "User added successfully" in result
-    assert result["User added successfully"].username == "us1"
-    assert result["User added successfully"].first_name == "fn1"
-    assert result["User added successfully"].last_name == "ln1"
+    assert result["User added successfully"].username == mock_user.username
+    assert result["User added successfully"].first_name == mock_user.first_name
+    assert result["User added successfully"].last_name == mock_user.last_name
 
 # @pytest.mark.asyncio
 # async def test_update_user():
@@ -89,19 +89,16 @@ async def test_create_user():
 async def test_delete_user():
     mock_db = MagicMock()
     mock_id = 1
-    mock_user = User(id = mock_id, username = 'us1', first_name = 'fn1', last_name = 'ln1')
+    mock_user = User(id = mock_id, username = 'user1', first_name = 'firstname1', last_name = 'lastname1')
 
     mock_db.query.return_value.filter.return_value.first.return_value = mock_user
 
-    result = await delete_user(user_id = mock_user.id, db=mock_db)
+    result = await delete_user(user_id=mock_user.id, db=mock_db)
 
     mock_db.delete.assert_called_once()
     mock_db.commit.assert_called_once()
 
     assert result == {"message": f"User with {mock_id} has been deleted"}
-
-
-
 
 
 
