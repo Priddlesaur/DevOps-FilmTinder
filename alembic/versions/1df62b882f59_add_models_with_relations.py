@@ -39,7 +39,7 @@ def upgrade() -> None:
     sa.Column('title', sa.String(), nullable=True),
     sa.Column('release_date', sa.Date(), nullable=True),
     sa.Column('runtime', sa.Integer(), nullable=True),
-    sa.Column('imdb_id', sa.Integer(), nullable=True),
+    sa.Column('imdb_id', sa.String(), nullable=True),
     sa.Column('genre_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['genre_id'], ['genres.id'], ),
     sa.PrimaryKeyConstraint('id'),
