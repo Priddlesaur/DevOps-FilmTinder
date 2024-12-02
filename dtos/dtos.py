@@ -22,7 +22,7 @@ class GenreDto(GenreBaseDto):
 class MovieBaseDto(BaseDto):
     title: Optional[str] = Field(default=None, min_length=1, max_length=100, description="Title of the movie")
     release_date: Optional[datetime] = Field(default=None, description="Release date of the movie")
-    runtime: Optional[int] = Field(default=None, ge=1, le=500, description="Runtime of the movie")
+    runtime: Optional[int] = Field(default=None, ge=1, description="Runtime of the movie")
     imdb_id: Optional[str] = Field(default=None, max_length=10, description="IMDB ID of the movie")
     genre_id: Optional[int] = Field(default=None, description="Genre of the movie")
 
