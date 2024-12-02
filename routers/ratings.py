@@ -13,7 +13,7 @@ router = APIRouter(
 
 def try_get_rating(rating_id: int, db: Session) -> Rating:
     """
-    Helperfunction for retreiving an existing rating by ID or throwing a 404-error.
+    Helper function for retrieving an existing rating by ID or throwing a 404-error.
     """
     rating = db.query(Rating).get(rating_id)
     if not rating:
