@@ -54,36 +54,38 @@ async def test_read_user():
 @pytest.mark.asyncio
 async def test_create_user():
     mock_db = MagicMock()
+    mock_response = MagicMock()
     mock_user = UserDto(username = 'user1', first_name = 'firstname1', last_name = 'lastname1')
 
     mock_db.query.return_value.filter.return_value.first.return_value = None
 
-    result = await create_user(user=mock_user, db=mock_db)
+    result = await create_user(user=mock_user, response = mock_response, db =mock_db)
 
     mock_db.add.assert_called_once()
     mock_db.commit.assert_called_once()
     mock_db.refresh.assert_called_once()
 
-    assert "User added successfully" in result
-    assert result["User added successfully"].username == mock_user.username
-    assert result["User added successfully"].first_name == mock_user.first_name
-    assert result["User added successfully"].last_name == mock_user.last_name
+    assert result.username == mock_user.username
+    assert result.first_name == mock_user.first_name
+    assert result.last_name == mock_user.last_name
 
-# @pytest.mark.asyncio
-# async def test_update_user():
-#     mock_db = MagicMock()
-#     user_id = 1
-#     existing_user = User(id = user_id, username='oldname', first_name='old', last_name='old')
-#     updated_user = UserDto(username='newname', first_name='new', last_name='new')
-#
-#     mock_db.query.return_value.filter_by.return_value.first.return_value = existing_user
-#
-#     result = await update_user(user_id = user_id, user = updated_user, db=mock_db)
-#
-#     mock_db.commit.assert_called_once()
-#     mock_db.refresh.assert_called_once()
-#
-#     assert result == {"User updated successfully": updated_user}
+@pytest.mark.asyncio
+async def test_update_user():
+    mock_db = MagicMock()
+    user_id = 1
+    existing_user = User(id = user_id, username='username', first_name='oldfirst', last_name='oldlast')
+    updated_user = UserDto(username='newname', first_name='newfirst', last_name='newfirst')
+
+    mock_db.query.return_value.filter_by.return_value.first.return_value = existing_user
+
+    result = await update_user(user_id = user_id, updated_user= updated_user, db=mock_db)
+
+    mock_db.commit.assert_called_once()
+    mock_db.refresh.assert_called_once()
+
+    assert result.username == updated_user.username
+    assert result.first_name == updated_user.first_name
+    assert result.last_name == updated_user.last_name
 
 @pytest.mark.asyncio
 async def test_delete_user():
