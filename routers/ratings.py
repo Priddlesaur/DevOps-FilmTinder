@@ -22,6 +22,9 @@ def try_get_rating(rating_id: int, db: Session) -> Rating:
 
 @router.get("/", response_model=list[RatingDto])
 async def read_ratings(db: Session = Depends(get_db)):
+    """
+    Retrieve all ratings.
+    """
     ratings = db.query(Rating).all()
     if not ratings:
         HTTPException(status_code=404, detail="No ratings found")
@@ -34,12 +37,18 @@ async def read_ratings(db: Session = Depends(get_db)):
 
 @router.get("/{rating_id}", response_model=RatingDto)
 async def read_rating(rating_id: int, db: Session = Depends(get_db)):
+    """
+    Retrieve rating by ID.
+    """
     rating = try_get_rating(rating_id, db)
 
     return RatingDto.model_validate(rating)
 
 @router.post("/", status_code=201, response_model=RatingDto)
 async def create_rating(rating: RatingBaseDto, response: Response, db: Session = Depends(get_db)):
+    """
+    Create a new rating.
+    """
     new_rating = Rating(**rating.model_dump())
 
     try:
@@ -57,17 +66,24 @@ async def create_rating(rating: RatingBaseDto, response: Response, db: Session =
 
 @router.patch("/{rating_id}", response_model=RatingDto)
 async def update_rating(rating_id: int, updated_rating: RatingBaseDto, db: Session = Depends(get_db)):
+    """
+    Update an existing rating by ID.
+    """
     rating = try_get_rating(rating_id, db)
 
     for key, value in updated_rating.model_dump(exclude_none=True).items():
         setattr(rating, key, value)
 
     db.commit()
+    db.refresh(rating)
 
     return RatingDto.model_validate(rating)
 
 @router.delete("/{rating_id}", response_model=RatingDto)
 async def delete_rating(rating_id: int, db: Session = Depends(get_db)):
+    """
+    Delete an existing rating by ID.
+    """
     rating = try_get_rating(rating_id, db)
 
     db.delete(rating)
