@@ -3,8 +3,10 @@ from fastapi.params import Depends
 from sqlalchemy.orm import Session
 
 from database import get_db
-from dtos.dtos import UserDto, UserBaseDto
+from dtos.dtos import UserDto, UserBaseDto, MovieDto
 from models.base import User
+
+from algorithm.algorithm import recommend_movies
 
 router = APIRouter(
     prefix="/users",
@@ -90,3 +92,10 @@ async def update_user(user_id: int, updated_user: UserBaseDto, db: Session = Dep
 
     # Return the updated genre
     return UserDto.model_validate(user)
+
+@router.get("/{user_id}/recommend", response_model=list[MovieDto])
+async def get_user_recommendations(user_id: int, db: Session = Depends(get_db)):
+    """
+    Get movie recommendations for a user.
+    """
+    return recommend_movies(user_id)
