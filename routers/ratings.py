@@ -11,8 +11,17 @@ router = APIRouter(
     tags=["ratings"],
 )
 
+def try_get_rating(rating_id: int, db: Session) -> Rating:
+    """
+    Helperfunction for retreiving an existing rating by ID or throwing a 404-error.
+    """
+    rating = db.query(Rating).get(rating_id)
+    if not rating:
+        raise HTTPException(status_code=404, detail="Rating not found")
+    return rating
+
 @router.get("/", response_model=list[RatingDto])
-async def get_ratings(db: Session = Depends(get_db)):
+async def read_ratings(db: Session = Depends(get_db)):
     ratings = db.query(Rating).all()
     if not ratings:
         HTTPException(status_code=404, detail="No ratings found")
@@ -23,11 +32,9 @@ async def get_ratings(db: Session = Depends(get_db)):
 
     return rating_dtos
 
-@router.get("/{id}", response_model=RatingDto)
-async def get_rating(rating_id: int, db: Session = Depends(get_db)):
-    rating = db.query(Rating).get(rating_id)
-    if not rating:
-        HTTPException(status_code=404, detail="Rating not found")
+@router.get("/{rating_id}", response_model=RatingDto)
+async def read_rating(rating_id: int, db: Session = Depends(get_db)):
+    rating = try_get_rating(rating_id, db)
 
     return RatingDto.model_validate(rating)
 
@@ -48,11 +55,9 @@ async def create_rating(rating: RatingBaseDto, response: Response, db: Session =
 
     return RatingDto.model_validate(new_rating)
 
-@router.patch("/{id}", response_model=RatingDto)
+@router.patch("/{rating_id}", response_model=RatingDto)
 async def update_rating(rating_id: int, updated_rating: RatingBaseDto, db: Session = Depends(get_db)):
-    rating = db.query(Rating).filter_by(id=rating_id).first()
-    if not rating:
-        HTTPException(status_code=404, detail="Rating not found")
+    rating = try_get_rating(rating_id, db)
 
     for key, value in updated_rating.model_dump(exclude_none=True).items():
         setattr(rating, key, value)
@@ -61,11 +66,9 @@ async def update_rating(rating_id: int, updated_rating: RatingBaseDto, db: Sessi
 
     return RatingDto.model_validate(rating)
 
-@router.delete("/{id}", response_model=RatingDto)
+@router.delete("/{rating_id}", response_model=RatingDto)
 async def delete_rating(rating_id: int, db: Session = Depends(get_db)):
-    rating = db.query(Rating).filter_by(id=rating_id).first()
-    if not rating:
-        HTTPException(status_code=404, detail="Rating not found")
+    rating = try_get_rating(rating_id, db)
 
     db.delete(rating)
     db.commit()

@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
-from sqlalchemy.testing.suite.test_reflection import users
 
 from database import get_db
 from dtos.dtos import UserDto, UserBaseDto
@@ -12,8 +11,17 @@ router = APIRouter(
     tags=["users"],
 )
 
+def try_get_user(user_id: int, db: Session) -> User:
+    """
+    Helperfunction for retreiving an existing user by ID or throwing a 404-error.
+    """
+    user = db.query(User).get(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
 @router.get("/", response_model=list[UserDto])
-async def get_users(db: Session = Depends(get_db)):
+async def read_users(db: Session = Depends(get_db)):
     users = db.query(User).all()
     if not users:
         HTTPException(status_code=404, detail="No users found")
@@ -109,39 +117,46 @@ async def delete_user(username : str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     db.delete(user)
     db.commit()
-    return {"User with deleted"}
+    return {"User deleted"}
 
-@router.put("/{user_id}")
-async def update_user(user_id: int, user: UserDto, db: Session = Depends(get_db)):
-    # Receiving the user with the filled in user_id
-    db_user = db.query(User).get(user_id)
-    # If user does not exist give an error
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
 
-    # Renewing the changes
-    db_user.username = user.username
-    db_user.first_name = user.first_name
-    db_user.last_name = user.last_name
+@router.patch("/{user_id}", response_model=UserDto)
+async def update_user(user_id: int, updated_user: UserBaseDto, db: Session = Depends(get_db)):
+    """
+    Update an existing user by ID.
+    """
+    user = try_get_user(user_id, db)
+
+    updates = updated_user.model_dump(exclude_none=True)
+    if not updates:
+        raise HTTPException(status_code=400, detail="No valid fields for update")
+
+    # Update the genre based on provided fields
+    for key, value in updates.items():
+        setattr(user, key, value)
+
+    # Commit changes and handle potential errors
     db.commit()
-    db.refresh(db_user)
-    return {"User updated successfully": db_user}
+    db.refresh(user)
 
-@router.put("/")
-async def update_user(username : str, user: UserDto, db: Session = Depends(get_db)):
-    # Receiving the user with the given username
-    db_user = db.query(User).filter(User.username == username).first()
-    # If the user does not exist give an error
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
+    # Return the updated genre
+    return UserDto.model_validate(user)
 
-    #Renewing the changes
-    db_user.username = user.username
-    db_user.first_name = user.first_name
-    db_user.last_name = user.last_name
-    db.commit()
-    db.refresh(db_user)
-    return {"User updated successfully": db_user}
+# @router.put("/")
+# async def update_user(username : str, user: UserDto, db: Session = Depends(get_db)):
+#     # Receiving the user with the given username
+#     db_user = db.query(User).filter(User.username == username).first()
+#     # If the user does not exist give an error
+#     if not db_user:
+#         raise HTTPException(status_code=404, detail="User not found")
+#
+#     #Renewing the changes
+#     db_user.username = user.username
+#     db_user.first_name = user.first_name
+#     db_user.last_name = user.last_name
+#     db.commit()
+#     db.refresh(db_user)
+#     return {"User updated successfully": db_user}
 
 
 

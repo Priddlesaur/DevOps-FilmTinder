@@ -2,51 +2,38 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
-class UserBaseDto(BaseModel):
+class BaseDto(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    username: str = Field(min_length=1, max_length=255, description="Username")
-    first_name: str = Field(min_length=1, max_length=255, description="First Name")
-    last_name: str = Field(min_length=1, max_length=255, description="Last Name")
+class UserBaseDto(BaseDto):
+    username: Optional[str] = Field(default=None, min_length=5, max_length=50, description="Username")
+    first_name: Optional[str] = Field(default=None, min_length=5, max_length=50, description="First name")
+    last_name: Optional[str] = Field(default=None, min_length=5, max_length=50, description="Last name")
 
 class UserDto(UserBaseDto):
-    model_config = ConfigDict(from_attributes=True)
+    id: Optional[int] = Field(default=None, description="Unique identifier for the user")
 
-    id: int = None
-
-class GenreBaseDto(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    name: str = Field(min_length=1, max_length=50, description="Name of the genre")
+class GenreBaseDto(BaseDto):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=50, description="Name of the genre")
 
 class GenreDto(GenreBaseDto):
-    model_config = ConfigDict(from_attributes=True)
+    id: Optional[int] = Field(default=None, description="Unique identifier for the genre")
 
-    id: int = None
-
-class MovieBaseDto(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    title: Optional[str] = Field(min_length=1, max_length=255, description="Title of the movie")
-    release_date: Optional[datetime] = None
-    runtime: Optional[int] = Field(min_length=1, description="Runtime of the movie")
-    imdb_id: Optional[int] = Field(min_length=1, description="IMDB_ID")
-    genre_id: Optional[int] = Field(min_length=1, description="Genre_ID")
+class MovieBaseDto(BaseDto):
+    title: Optional[str] = Field(default=None, min_length=1, max_length=100, description="Title of the movie")
+    release_date: Optional[datetime] = Field(default=None, description="Release date of the movie")
+    runtime: Optional[int] = Field(default=None, ge=1, le=500, description="Runtime of the movie")
+    imdb_id: Optional[str] = Field(default=None, max_length=10, description="IMDB ID of the movie")
+    genre_id: Optional[int] = Field(default=None, description="Genre of the movie")
 
 class MovieDto(MovieBaseDto):
-    model_config = ConfigDict(from_attributes=True)
+    id: Optional[int] = Field(default=None, description="Unique identifier for the movie")
 
-    id: int = None
-
-class RatingBaseDto(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    movie_id: Optional[int] = None
-    user_id: Optional[int] = None
-    rating: Optional[int] = None
-    date: Optional[datetime] = None
+class RatingBaseDto(BaseDto):
+    movie_id: Optional[int] = Field(default=None, description="Movie ID of rated movie")
+    user_id: Optional[int] = Field(default=None, description="User ID of rating user")
+    rating: Optional[int] = Field(default=None, ge=0, le=5, description="Rating for the movie (0-5)")
+    date: Optional[datetime] = Field(default=None, description="Date of the rating")
 
 class RatingDto(RatingBaseDto):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int = None
+    id: Optional[int] = Field(default=None, description="Unique identifier for the rating")
