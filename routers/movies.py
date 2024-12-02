@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from fastapi.params import Depends
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -42,7 +42,7 @@ async def read_movie(movie_id: int, db: Session = Depends(get_db)):
     return MovieDto.model_validate(movie)
 
 @router.post("/", response_model=MovieDto)
-async def create_movie(movie: MovieDto, db: Session = Depends(get_db)):
+async def create_movie(movie: MovieDto, response: Response, db: Session = Depends(get_db)):
     """
     Create a new movie.
     """
@@ -63,6 +63,8 @@ async def create_movie(movie: MovieDto, db: Session = Depends(get_db)):
     except KeyError as err:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Invalid field: {str(err)}")
+
+    response.headers["Location"] = f"/genres/{new_movie.id}"
 
     return MovieDto.model_validate(new_movie)
 

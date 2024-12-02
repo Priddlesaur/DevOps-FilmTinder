@@ -59,7 +59,6 @@ async def create_rating(rating: RatingBaseDto, response: Response, db: Session =
         db.rollback()
         raise HTTPException(status_code=400, detail=str(err))
 
-    response.status_code = 201
     response.headers["Location"] = f"/ratings/{new_rating.id}"
 
     return RatingDto.model_validate(new_rating)
