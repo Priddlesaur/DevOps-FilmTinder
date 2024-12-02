@@ -67,17 +67,35 @@ all_movies = {entry['movie_id'] for entry in ratings_data}
 for user_ratings in user_item_matrix.values():
     for movie in all_movies:
         if movie not in user_ratings:
-            user_ratings[movie] = 0
+            user_ratings[movie] = None
 
 
-# Cosinusgelijkenis
 def cosine_similarity(user1, user2):
-    ratings1 = list(user_item_matrix[user1].values())
-    ratings2 = list(user_item_matrix[user2].values())
+    common_movies = [
+        movie for movie in user_item_matrix[user1]
+        if
+        movie in user_item_matrix[user2] and user_item_matrix[user1][movie] > 0 and user_item_matrix[user2][movie] > 0
+    ]
+    if not common_movies:
+        return 0  # Geen gedeelde beoordelingen, gelijkenis is 0
+
+    ratings1 = [user_item_matrix[user1][movie] for movie in common_movies]
+    ratings2 = [user_item_matrix[user2][movie] for movie in common_movies]
+
     dot_product = sum(r1 * r2 for r1, r2 in zip(ratings1, ratings2))
     norm1 = sum(r ** 2 for r in ratings1) ** 0.5
     norm2 = sum(r ** 2 for r in ratings2) ** 0.5
+
     return dot_product / (norm1 * norm2) if norm1 and norm2 else 0
+
+# Cosinusgelijkenis
+# def cosine_similarity(user1, user2):
+#     ratings1 = list(user_item_matrix[user1].values())
+#     ratings2 = list(user_item_matrix[user2].values())
+#     dot_product = sum(r1 * r2 for r1, r2 in zip(ratings1, ratings2))
+#     norm1 = sum(r ** 2 for r in ratings1) ** 0.5
+#     norm2 = sum(r ** 2 for r in ratings2) ** 0.5
+#     return dot_product / (norm1 * norm2) if norm1 and norm2 else 0
 
 
 def get_top_k_similar_users(user_id, k=2):
@@ -183,6 +201,6 @@ def recommend_movies(user_id, k=2, top_n=3):
 
 
 # Voorbeeld van gebruik
-user_id = 7
+user_id = 2
 recommended_movie_titles = recommend_movies(user_id)
 print(f"Aanbevelingen voor gebruiker {user_id}: {recommended_movie_titles}")
