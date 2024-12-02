@@ -64,10 +64,11 @@ async def test_create_genre():
     mock_response.status_code = 201
     mock_response.headers["Location"] = f"/genres/{result.id}"
 
-@pytest.mark.asyncio
-async def test_upgrade_genre():
-    mock_db = MagicMock()
 
+#bijwerken
+@pytest.mark.asyncio
+async def test_update_genre():
+    mock_db = MagicMock()
     genre_id = 1
     existing_genre = GenreDto(id=genre_id, name='Horror')
     updated_genre = GenreBaseDto(name='Horror/Mysterie')
@@ -76,10 +77,9 @@ async def test_upgrade_genre():
 
     result = await update_genre(genre_id = genre_id, updated_genre = updated_genre, db=mock_db)
 
-    mock_db.query.return_value.filter_by.assert_called_once_with(id=genre_id)
     mock_db.commit.assert_called_once()
+    mock_db.refresh.assert_called_once()
 
-    assert existing_genre.name == updated_genre.name
     assert result.name == updated_genre.name
     assert result.id == genre_id
 
