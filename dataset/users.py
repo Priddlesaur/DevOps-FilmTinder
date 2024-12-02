@@ -9,8 +9,8 @@ def generate_test_users(count=100):
     """
     Generates a list of test users.
     """
-    first_names = ["John", "Alice", "Bob", "Sarah", "Michael", "Emily", "Chris", "Jessica"]
-    last_names = ["Doe", "Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis"]
+    first_names = ["Johnny", "Alice", "Bobbie", "Sarah", "Michael", "Emily", "Chris", "Jessica", "Zakje"]
+    last_names = ["Doedel", "Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis"]
 
     users = []
     for i in range(count):
