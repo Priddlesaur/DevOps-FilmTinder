@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from dtos.dtos import GenreDto, GenreBaseDto
+from helpers.database_helpers import delete_or_rollback
 from models.base import Genre
 
 router = APIRouter(
@@ -12,7 +13,7 @@ router = APIRouter(
 
 def try_get_genre(genre_id: int, db: Session) -> Genre:
     """
-    Helperfunction for retreiving an existing genre by ID or throwing a 404-error.
+    Helper function for retrieving an existing genre by ID or throwing a 404-error.
     """
     genre = db.query(Genre).get(genre_id)
     if not genre:
@@ -25,9 +26,6 @@ async def read_genres(db: Session = Depends(get_db)):
     Retrieve all genres.
     """
     genres = db.query(Genre).all()
-    if not genres:
-        raise HTTPException(status_code=404, detail="No genres found")
-
     return [GenreDto.model_validate(genre) for genre in genres]
 
 @router.get("/{genre_id}", response_model=GenreDto)
@@ -36,7 +34,6 @@ async def read_genre(genre_id: int, db: Session = Depends(get_db)):
     Retrieve genre by ID.
     """
     genre = try_get_genre(genre_id, db)
-
     return GenreDto.model_validate(genre)
 
 @router.post("/", status_code=201, response_model=GenreDto)
@@ -76,8 +73,12 @@ async def update_genre(genre_id: int, updated_genre: GenreBaseDto, db: Session =
         setattr(genre, key, value)
 
     # Commit changes and handle potential errors
-    db.commit()
-    db.refresh(genre)
+    try:
+        db.commit()
+        db.refresh(genre)
+    except Exception as err:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="An error occurred while updating the genre")
 
     # Return the updated genre
     return GenreDto.model_validate(genre)
@@ -88,10 +89,7 @@ async def delete_genre(genre_id: int, db: Session = Depends(get_db)):
     Delete a genre by ID.
     """
     genre = try_get_genre(genre_id, db)
-
-    # Delete the genre from the database
-    db.delete(genre)
-    db.commit()
+    delete_or_rollback(genre, db)
 
     # Return a message
     return {"message": f"Genre with {genre_id} has been deleted"}

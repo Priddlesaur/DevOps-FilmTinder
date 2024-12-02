@@ -85,7 +85,11 @@ async def delete_rating(rating_id: int, db: Session = Depends(get_db)):
     """
     rating = try_get_rating(rating_id, db)
 
-    db.delete(rating)
-    db.commit()
+    try:
+        db.delete(rating)
+        db.commit()
+    except Exception as err:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="An error occurred while deleting the rating")
 
     return {"message": f"Rating with {rating_id} has been deleted"}

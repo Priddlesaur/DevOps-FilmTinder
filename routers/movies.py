@@ -103,7 +103,11 @@ async def delete_movie(movie_id: int, db: Session = Depends(get_db)):
     """
     movie = try_get_movie(movie_id, db)
 
-    db.delete(movie)
-    db.commit()
+    try:
+        db.delete(movie)
+        db.commit()
+    except Exception as err:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(err))
 
     return {"detail": f"Movie with ID {movie_id} has been deleted"}
