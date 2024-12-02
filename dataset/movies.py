@@ -16,7 +16,7 @@ COLUMN_NAMES = [
     "spoken_languages", "keywords",
 ]
 
-def populate_database():
+def populate_movies():
     """
     Populates the database with movies from the TMDB dataset.
     :return: None
