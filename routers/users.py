@@ -4,6 +4,9 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from dtos.dtos import UserDto, UserBaseDto, MovieDto
+from dtos.dtos import UserDto, UserBaseDto
+from helpers.database_helpers import delete_or_rollback, get_all_entities, get_entity, create_or_rollback, \
+    update_or_rollback
 from models.base import User
 
 from algorithm.algorithm import recommend_movies
@@ -13,85 +16,36 @@ router = APIRouter(
     tags=["users"],
 )
 
-def try_get_user(user_id: int, db: Session) -> User:
-    """
-    Helper function for retrieving an existing user by ID or throwing a 404-error.
-    """
-    user = db.query(User).get(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
 @router.get("/", response_model=list[UserDto])
 async def read_users(db: Session = Depends(get_db)):
-    users = db.query(User).all()
-    if not users:
-        HTTPException(status_code=404, detail="No users found")
-
-    user_dtos = []
-    for user in users:
-        user_dtos.append(UserDto.model_validate(user))
-
-    return user_dtos
+    users = get_all_entities(User, db)
+    return [UserDto.model_validate(user) for user in users]
 
 @router.get("/{user_id}", response_model=UserDto)
 async def read_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).get(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Return the user
+    user = get_entity(User, user_id, db)
     return UserDto.model_validate(user)
 
 @router.post("/")
 async def create_user(user: UserBaseDto, response: Response, db: Session = Depends(get_db)):
-    """
-    Create a new user.
-    """
-    new_user = User(**user.model_dump())
-
-    try:
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-    except Exception as err:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=str(err))
-
+    new_user = create_or_rollback(User, user.model_dump(), db)
     response.headers["Location"] = f"/ratings/{new_user.id}"
-
     return UserDto.model_validate(new_user)
-
-@router.delete("/{user_id}")
-async def delete_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).get(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    db.delete(user)
-    db.commit()
-    return {"message": f"User with {user_id} has been deleted"}
 
 @router.patch("/{user_id}", response_model=UserDto)
 async def update_user(user_id: int, updated_user: UserBaseDto, db: Session = Depends(get_db)):
-    """
-    Update an existing user by ID.
-    """
-    user = try_get_user(user_id, db)
-
+    user = get_entity(User, user_id, db)
     updates = updated_user.model_dump(exclude_none=True)
-    if not updates:
-        raise HTTPException(status_code=400, detail="No valid fields for update")
+    updated_user_final = update_or_rollback(user, updates, db)
+    return UserDto.model_validate(updated_user_final)
 
-    # Update the genre based on provided fields
-    for key, value in updates.items():
-        setattr(user, key, value)
+@router.delete("/{user_id}")
+async def delete_user(user_id: int, db: Session = Depends(get_db)):
+    user = get_entity(User,user_id, db)
+    delete_or_rollback(user,db)
+    return {"message": f"User with ID {user_id} has been deleted"}
 
-    # Commit changes and handle potential errors
-    db.commit()
-    db.refresh(user)
 
-    # Return the updated genre
-    return UserDto.model_validate(user)
 
 @router.get("/{user_id}/recommend", response_model=list[MovieDto])
 async def get_user_recommendations(user_id: int, db: Session = Depends(get_db)):
