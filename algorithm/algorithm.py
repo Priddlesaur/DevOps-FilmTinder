@@ -69,25 +69,6 @@ for user_ratings in user_item_matrix.values():
         if movie not in user_ratings:
             user_ratings[movie] = None
 
-
-def cosine_similarity(user1, user2):
-    common_movies = [
-        movie for movie in user_item_matrix[user1]
-        if
-        movie in user_item_matrix[user2] and user_item_matrix[user1][movie] > 0 and user_item_matrix[user2][movie] > 0
-    ]
-    if not common_movies:
-        return 0  # Geen gedeelde beoordelingen, gelijkenis is 0
-
-    ratings1 = [user_item_matrix[user1][movie] for movie in common_movies]
-    ratings2 = [user_item_matrix[user2][movie] for movie in common_movies]
-
-    dot_product = sum(r1 * r2 for r1, r2 in zip(ratings1, ratings2))
-    norm1 = sum(r ** 2 for r in ratings1) ** 0.5
-    norm2 = sum(r ** 2 for r in ratings2) ** 0.5
-
-    return dot_product / (norm1 * norm2) if norm1 and norm2 else 0
-
 # Cosinusgelijkenis
 # def cosine_similarity(user1, user2):
 #     ratings1 = list(user_item_matrix[user1].values())
@@ -95,7 +76,28 @@ def cosine_similarity(user1, user2):
 #     dot_product = sum(r1 * r2 for r1, r2 in zip(ratings1, ratings2))
 #     norm1 = sum(r ** 2 for r in ratings1) ** 0.5
 #     norm2 = sum(r ** 2 for r in ratings2) ** 0.5
-#     return dot_product / (norm1 * norm2) if norm1 and norm2 else 0
+#     return dot_product / (norm1 * norm2) if norm1 and norm2 else None
+
+def cosine_similarity(user1, user2):
+    ratings1 = user_item_matrix[user1]
+    ratings2 = user_item_matrix[user2]
+
+    common_movies = [
+        movie for movie in ratings1 if ratings1[movie] is not None and ratings2[movie] is not None
+    ]
+    if not common_movies:
+        return 0  # Geen gemeenschappelijke films -> gelijkenis is 0
+
+    # Verzamel ratings voor gedeelde films
+    r1 = [ratings1[movie] for movie in common_movies]
+    r2 = [ratings2[movie] for movie in common_movies]
+
+    # Bereken cosinusgelijkenis
+    dot_product = sum(x * y for x, y in zip(r1, r2))
+    norm1 = sum(x ** 2 for x in r1) ** 0.5
+    norm2 = sum(y ** 2 for y in r2) ** 0.5
+
+    return dot_product / (norm1 * norm2) if norm1 and norm2 else 0
 
 
 def get_top_k_similar_users(user_id, k=2):
@@ -121,7 +123,7 @@ def time_release_weight(movie_id, preferred_runtime, preferred_release_year):
 
 # Functie om automatisch de voorkeuren van de gebruiker te bepalen
 def get_user_preferences(user_id):
-    liked_movies = [movie_id for movie_id, rating in user_item_matrix[user_id].items() if rating > 3]
+    liked_movies = [movie_id for movie_id, rating in user_item_matrix[user_id].items() if rating is not None and rating > 3]
     if not liked_movies:
         return 100, 2010  # Standaard waarden als geen films zijn geliket
 
@@ -137,7 +139,7 @@ def get_user_preferences(user_id):
 
 # Functie om het favoriete genre van een gebruiker te bepalen
 def get_user_favorite_genre(user_id):
-    liked_movies = [movie_id for movie_id, rating in user_item_matrix[user_id].items() if rating > 3]
+    liked_movies = [movie_id for movie_id, rating in user_item_matrix[user_id].items() if rating is not None and rating > 3]
     if not liked_movies:
         return None  # Geen favoriete genre als er geen films geliket zijn
 
@@ -153,6 +155,32 @@ def genre_weight(movie_id, favorite_genre):
 
 
 # Aangepaste predictie functie om tijd, release en genre mee te nemen
+# def predict_rating(user_id, movie_id, k=2):
+#     preferred_runtime, preferred_release_year = get_user_preferences(user_id)
+#     favorite_genre = get_user_favorite_genre(user_id)
+#
+#     top_k_users = get_top_k_similar_users(user_id, k)
+#     ratings = []
+#     similarities = []
+#
+#     for other_user in top_k_users:
+#         rating = user_item_matrix[other_user][movie_id]
+#         if rating is not None:
+#             ratings.append(rating)
+#             similarities.append(cosine_similarity(user_id, other_user))
+#
+#     if not ratings:
+#         return None
+#
+#     weighted_ratings = sum(r * s for r, s in zip(ratings, similarities)) / sum(similarities)
+#
+#     # Voeg tijd, release en genre gewicht toe aan de voorspelling
+#     tr_weight = time_release_weight(movie_id, preferred_runtime, preferred_release_year)
+#     genre_factor = genre_weight(movie_id, favorite_genre)
+#
+#     final_rating = weighted_ratings * tr_weight * genre_factor
+#     return final_rating
+
 def predict_rating(user_id, movie_id, k=2):
     preferred_runtime, preferred_release_year = get_user_preferences(user_id)
     favorite_genre = get_user_favorite_genre(user_id)
@@ -162,13 +190,13 @@ def predict_rating(user_id, movie_id, k=2):
     similarities = []
 
     for other_user in top_k_users:
-        rating = user_item_matrix[other_user][movie_id]
-        if rating > 0:
+        rating = user_item_matrix[other_user].get(movie_id)
+        if rating is not None:
             ratings.append(rating)
             similarities.append(cosine_similarity(user_id, other_user))
 
     if not ratings:
-        return None
+        return None  # Geen voorspelling mogelijk als er geen beoordelingen zijn
 
     weighted_ratings = sum(r * s for r, s in zip(ratings, similarities)) / sum(similarities)
 
@@ -179,11 +207,28 @@ def predict_rating(user_id, movie_id, k=2):
     final_rating = weighted_ratings * tr_weight * genre_factor
     return final_rating
 
-
 # Aanbevelingen genereren met tijd, release en genre voorkeuren
+# def recommend_movies(user_id, k=2, top_n=3):
+#     user_ratings = user_item_matrix[user_id]
+#     unrated_movies = [movie for movie, rating in user_ratings.items() if rating == 0]
+#
+#     predictions = []
+#     for movie_id in unrated_movies:
+#         predicted_rating = predict_rating(user_id, movie_id, k)
+#         if predicted_rating is not None:
+#             predictions.append((movie_id, predicted_rating))
+#
+#     predictions.sort(key=lambda x: x[1], reverse=True)
+#     recommended_movies = [movie for movie, rating in predictions[:top_n]]
+#
+#     # Haal de titels van de aanbevolen films op
+#     recommended_movie_titles = [movies_data[movie_id]['title'] for movie_id in recommended_movies]
+#
+#     return recommended_movie_titles
+
 def recommend_movies(user_id, k=2, top_n=3):
     user_ratings = user_item_matrix[user_id]
-    unrated_movies = [movie for movie, rating in user_ratings.items() if rating == 0]
+    unrated_movies = [movie for movie, rating in user_ratings.items() if rating is None]
 
     predictions = []
     for movie_id in unrated_movies:
@@ -199,8 +244,7 @@ def recommend_movies(user_id, k=2, top_n=3):
 
     return recommended_movie_titles
 
-
 # Voorbeeld van gebruik
-user_id = 2
+user_id = 1
 recommended_movie_titles = recommend_movies(user_id)
 print(f"Aanbevelingen voor gebruiker {user_id}: {recommended_movie_titles}")
