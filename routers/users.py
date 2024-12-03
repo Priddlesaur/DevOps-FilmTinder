@@ -7,9 +7,12 @@ from dtos.dtos import UserDto, UserBaseDto, MovieDto
 from dtos.dtos import UserDto, UserBaseDto
 from helpers.database_helpers import delete_or_rollback, get_all_entities, get_entity, create_or_rollback, \
     update_or_rollback
+from dtos.dtos import UserDto, UserBaseDto
 from models.base import User
 
-from algorithm.algorithm import recommend_movies
+from algorithm.algorithm import (
+    recommend_movies, load_data_from_db, build_user_item_matrix, cosine_similarity_matrix
+)
 
 router = APIRouter(
     prefix="/users",
@@ -47,9 +50,17 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)):
 
 
 
-@router.get("/{user_id}/recommend", response_model=list[MovieDto])
-async def get_user_recommendations(user_id: int, db: Session = Depends(get_db)):
+
+@router.get("/{user_id}/recommend")
+async def get_user_recommendations(user_id: int):
     """
     Get movie recommendations for a user.
     """
-    return recommend_movies(user_id)
+    ratings_data, movies_data = load_data_from_db()
+
+    user_item_matrix = build_user_item_matrix(ratings_data)
+    similarity_matrix = cosine_similarity_matrix(user_item_matrix)
+    recommended_movies = recommend_movies(
+        user_id, user_item_matrix, similarity_matrix, movies_data, k=5, top_n=5
+    )
+    return recommended_movies
