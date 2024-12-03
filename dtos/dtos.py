@@ -32,7 +32,7 @@ class MovieDto(MovieBaseDto):
 class RatingBaseDto(BaseDto):
     movie_id: Optional[int] = Field(default=None, description="Movie ID of rated movie")
     user_id: Optional[int] = Field(default=None, description="User ID of rating user")
-    rating: Optional[int] = Field(default=None, ge=1, le=5, description="Rating for the movie (1-5)")
+    rating: Optional[int] = Field(default=None, ge=0, le=5, description="Rating for the movie (1-5)")
     date: Optional[datetime] = Field(default=None, description="Date of the rating")
 
 class RatingDto(RatingBaseDto):
