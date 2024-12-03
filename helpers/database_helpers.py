@@ -14,7 +14,7 @@ def get_entity(entity_class, entity_id: int, db: Session):
     """
     entity = db.query(entity_class).get(entity_id)
     if not entity:
-        raise HTTPException(status_code=404, detail=f"Entity not found")
+        raise HTTPException(status_code=404, detail="Entity not found")
     return entity
 
 def create_or_rollback(entity_class, entity_data: dict, db: Session):
