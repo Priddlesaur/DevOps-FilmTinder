@@ -27,12 +27,12 @@ jobs:
 #            pip install -r requirements.txt
 #            pip install aiosqlite  # for testing
 #
-#        # Run tests
-#      - name: Run tests
-#        env:
-#         DATABASE_URL: "sqlite:///./test_db.db"
-#        run: |
-#         pytest
+        # Run tests
+      - name: Run tests
+        env:
+         DATABASE_URL: "sqlite:///./test_db.db"
+        run: |
+         pytest
 
         # Log in to DigitalOcean Container Registry
       - name: Log in to DigitalOcean
