@@ -23,6 +23,13 @@ def create_or_rollback(entity_class, entity_data: dict, db: Session):
     Some classes include foreign keys, which may raise exceptions in some cases.
     """
     new_entity = entity_class(**entity_data)
+
+    for field, value in entity_data.items():
+        expect_type = getattr(entity_class, field).type.python_type
+        if not isinstance(value, expect_type) and value is not None:
+            db.rollback()
+            raise HTTPException(status_code=400, detail=f"Invalid type input: Field {field} must be of type {expect_type}")
+
     try:
         db.add(new_entity)
         db.commit()
@@ -49,6 +56,10 @@ def update_or_rollback(instance: object, updates: dict, db: Session):
         raise HTTPException(status_code=400, detail="No valid fields for update")
 
     for key,value in updates.items():
+        expect_type = getattr(instance.__class__, key).type.python_type
+        if not isinstance(value, expect_type) and value is not None:
+            db.rollback()
+            raise HTTPException(status_code=400, detail=f"Invalid type input: Key {key} must be of type {expect_type}")
         setattr(instance, key, value)
 
     try:
@@ -76,7 +87,7 @@ def delete_or_rollback(instance: object, db: Session):
         db.commit()
     except Exception:
         db.rollback()
-        raise HTTPException(status_code=400, detail="An error occurred while deleting the genre")
+        raise HTTPException(status_code=400, detail="An error occurred while deleting")
 
 
 
