@@ -14,4 +14,4 @@ COPY . .
 EXPOSE 5000/tcp
 
 # First run migrations then run the app
-CMD alembic upgrade head && python populate_database.py && uvicorn main:app --host 0.0.0.0 --port 5000
+CMD alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 5000
