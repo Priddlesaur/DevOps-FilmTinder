@@ -1,11 +1,7 @@
-import os
-import pytest
 import database
 from database import get_db
 from main import app
 from datetime import datetime
-from dotenv import load_dotenv
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from models.base import Base, Movie, Genre
 from fastapi.testclient import TestClient
@@ -15,7 +11,7 @@ client = TestClient(app)
 def fill_db(db: Session):
     Base.metadata.create_all(database.engine)
 
-    genre = Genre(name="Comedy")
+    genre = Genre(name="Comedy") # Genre id will be 1
     db.add(genre)
     db.commit()
 
@@ -116,6 +112,7 @@ def test_delete_movie(db = next(get_db())):
     assert response.json() == {"detail": f"Movie with ID 1 has been deleted"}
 
     drop_tables()
+
 
 
 
