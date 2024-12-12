@@ -48,9 +48,6 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)):
     delete_or_rollback(user,db)
     return {"message": f"User with ID {user_id} has been deleted"}
 
-
-
-
 @router.get("/{user_id}/recommend")
 async def get_user_recommendations(user_id: int):
     """
