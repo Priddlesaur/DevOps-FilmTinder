@@ -2,7 +2,7 @@ import database
 from database import get_db
 from main import app
 from datetime import datetime
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from models.base import Base, Movie, Genre
 from fastapi.testclient import TestClient
 
