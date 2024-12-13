@@ -3,28 +3,57 @@ from database import get_db
 from main import app
 from datetime import datetime
 from sqlalchemy.orm import Session
-from models.base import Base, Movie, Genre
+from models.base import Base, Movie, Genre, User, Rating
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
-def fill_db(db: Session):
-    Base.metadata.create_all(database.engine)
 
+def fill_db(db: Session):
+    drop_tables()
+    create_tables()
+
+    # Add test genre.
     genre = Genre(name="Comedy") # Genre id will be 1
     db.add(genre)
     db.commit()
+    db.refresh(genre)
 
-    movie_data = [
+    # Add test movies.
+    test_movies = [
         Movie(title="Gladiator", release_date=datetime(2024, 1, 1), runtime=180, imdb_id="tt1234567",
               genre_id=genre.id),
         Movie(title="The Dark Knight", release_date=datetime(2024, 1, 1), runtime=120, imdb_id="tt36223",
               genre_id=genre.id)
     ]
-
-    for movie in movie_data:
+    for movie in test_movies:
         db.add(movie)
         db.commit()
+        db.refresh(movie)
+
+    # Add test users.
+    test_users = [
+        User(username="user1", first_name="John", last_name="Doe"),
+        User(username="user2", first_name="Jane", last_name="Doe"),
+        User(username="user3", first_name="Bob", last_name="Smith")
+    ]
+    for user in test_users:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    # Add test ratings.
+    test_ratings = [
+        Rating(user_id=1, movie_id=2, rating=4, date=datetime(2024, 2, 10)),
+        Rating(user_id=2, movie_id=1, rating=5, date=datetime(2024, 2, 10)),
+        Rating(user_id=2, movie_id=2, rating=2, date=datetime(2024, 2, 10)),
+        Rating(user_id=3, movie_id=2, rating=3, date=datetime(2024, 2, 10)),
+        Rating(user_id=3, movie_id=1, rating=1, date=datetime(2024, 2, 10))
+    ]
+    for rating in test_ratings:
+        db.add(rating)
+        db.commit()
+        db.refresh(rating)
 
 def drop_tables():
     Base.metadata.drop_all(database.engine)
@@ -109,17 +138,18 @@ def test_delete_movie(db = next(get_db())):
     response = client.delete("/movies/1")
 
     assert response.status_code == 200
-    assert response.json() == {"detail": f"Movie with ID 1 has been deleted"}
+    assert response.json() == {"detail": "Movie with ID 1 has been deleted"}
 
     drop_tables()
 
+def test_get_user_recommendations(db = next(get_db())):
+    fill_db(db)
 
+    response = client.get("/users/1/recommend")
+    assert response.status_code == 200
+    assert response.json() == ['Gladiator']
 
-
-
-
-
-
+    drop_tables()
 
 
 

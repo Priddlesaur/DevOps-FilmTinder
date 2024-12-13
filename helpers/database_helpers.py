@@ -12,7 +12,7 @@ def get_entity(entity_class, entity_id: int, db: Session):
     """
     Helper function that retrieves an entity from the provided data by its ID.
     """
-    entity = db.query(entity_class).get(entity_id)
+    entity = db.get(entity_class, entity_id)
     if not entity:
         raise HTTPException(status_code=404, detail="Entity not found")
     return entity

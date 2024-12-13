@@ -1,5 +1,3 @@
-# test_recommendation_algorithm.py
-import pytest
 import pandas as pd
 from algorithm.algorithm import (
     build_user_item_matrix, cosine_similarity_matrix, recommend_movies
@@ -40,13 +38,3 @@ def test_recommend_movies():
 
     assert len(recommendations) == 1
     assert recommendations[0] in ['Movie 3']
-
-@pytest.mark.asyncio
-async def test_get_user_recommendations():
-    from fastapi.testclient import TestClient
-    from main import app
-
-    client = TestClient(app)
-    response = client.get("/users/1/recommend")
-    assert response.status_code == 200
-    assert len(response.json()) > 0
