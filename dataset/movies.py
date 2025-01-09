@@ -8,7 +8,7 @@ from datetime import datetime
 from database import get_db
 from models.base import Genre, Movie
 
-MAX_MOVIES = 50_000
+MAX_MOVIES = 1000
 COLUMN_NAMES = [
     "id", "title", "vote_average", "vote_count", "status", "release_date", "revenue", "runtime", "adult",
     "backdrop_path", "budget", "homepage", "imdb_id", "original_language", "original_title", "overview",
