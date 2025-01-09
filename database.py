@@ -1,6 +1,5 @@
 import os
 
-from alembic.config import Config
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
